@@ -12,29 +12,10 @@ import sys
 visualization_type = sys.argv[1]
 
 _time_prev = time.time() * 1000.0
-"""The previous time that the frames_per_second() function was called"""
 
 _fps = dsp.ExpFilter(val=config.FPS, alpha_decay=0.2, alpha_rise=0.2)
-"""The low-pass filter used to estimate frames-per-second"""
-
 
 def frames_per_second():
-    """Return the estimated frames per second
-
-    Returns the current estimate for frames-per-second (FPS).
-    FPS is estimated by measured the amount of time that has elapsed since
-    this function was previously called. The FPS estimate is low-pass filtered
-    to reduce noise.
-
-    This function is intended to be called one time for every iteration of
-    the program's main loop.
-
-    Returns
-    -------
-    fps : float
-        Estimated frames-per-second. This value is low-pass filtered
-        to reduce noise.
-    """
     global _time_prev, _fps
     time_now = time.time() * 1000.0
     dt = time_now - _time_prev
@@ -43,9 +24,7 @@ def frames_per_second():
         return _fps.value
     return _fps.update(1000.0 / dt)
 
-
 def memoize(function):
-    """Provides a decorator for memoizing functions"""
     from functools import wraps
     memo = {}
 
@@ -59,36 +38,18 @@ def memoize(function):
             return rv
     return wrapper
 
-
 @memoize
 def _normalized_linspace(size):
     return np.linspace(0, 1, size)
 
 
 def interpolate(y, new_length):
-    """Intelligently resizes the array by linearly interpolating the values
-
-    Parameters
-    ----------
-    y : np.array
-        Array that should be resized
-
-    new_length : int
-        The length of the new interpolated array
-
-    Returns
-    -------
-    z : np.array
-        New array with length of new_length that contains the interpolated
-        values of y.
-    """
     if len(y) == new_length:
         return y
     x_old = _normalized_linspace(len(y))
     x_new = _normalized_linspace(new_length)
     z = np.interp(x_new, x_old, y)
     return z
-
 
 r_filt = dsp.ExpFilter(np.tile(0.01, config.N_PIXELS // 2),
                        alpha_decay=0.2, alpha_rise=0.99)
@@ -106,7 +67,6 @@ gain = dsp.ExpFilter(np.tile(0.01, config.N_FFT_BINS),
 
 
 def visualize_scroll(y):
-    """Effect that originates in the center and scrolls outwards"""
     global p
     y = y**2.0
     gain.update(y)
@@ -126,9 +86,7 @@ def visualize_scroll(y):
     # Update the LED strip
     return np.concatenate((p[:, ::-1], p), axis=1)
 
-
 def visualize_energy(y):
-    """Effect that expands from the center with increasing sound energy"""
     global p
     y = np.copy(y)
     gain.update(y)
